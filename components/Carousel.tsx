@@ -1,9 +1,13 @@
 'use client';
+import { fetchAllWorkouts, fetchUserWorkouts } from '@/app/api/workouts';
+
+import { addDays, format, subDays } from 'date-fns';
+import { enUS, se } from 'date-fns/locale';
+import { useSession } from 'next-auth/react';
 import React, { useEffect, useState } from 'react';
-import { format, addDays, subDays } from 'date-fns';
-import { enUS } from 'date-fns/locale';
 import Loading from './Loading';
 import { AddWorkoutDialog } from './myUi/AddWorkoutDialog';
+import { Button } from './ui/button';
 
 type Props = {};
 
@@ -12,6 +16,31 @@ const Carousel = (props: Props) => {
   const [days, setDays] = useState<Date[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const { data: session } = useSession();
+
+  // const clientFetchAllWorkouts = async () => {
+  //   const workout = await fetchAllWorkouts();
+  //   setWorkouts(workout);
+  // };
+
+  const clientFetchUserWorkouts = async () => {
+    const userWorkouts = await fetchUserWorkouts(
+      session?.user?.email as string,
+    );
+    setWorkouts(userWorkouts);
+  };
+
+  const [workouts, setWorkouts] = useState<
+    | {
+        id: number;
+        workoutTitle: string;
+        type: string;
+        musclesTrained: string;
+        userEmail: string;
+        date: string;
+      }[]
+    | null
+  >(null);
 
   useEffect(() => {
     setLoading(true);
@@ -24,7 +53,8 @@ const Carousel = (props: Props) => {
 
     setDays(daysArray);
     setLoading(false);
-  }, []);
+    clientFetchUserWorkouts();
+  }, [session?.user?.email]);
 
   const handleNextDay = () => {
     setCurrentDay((prev) => {
@@ -42,6 +72,18 @@ const Carousel = (props: Props) => {
     });
   };
 
+  const jumpToToday = () => {
+    const today = new Date();
+    setCurrentDay(today);
+    setDays(Array.from({ length: 7 }, (_, i) => addDays(today, i - 3)));
+  };
+
+  const getMusclesTrainedForDate = (date: Date) => {
+    const formattedDate = format(date, 'dd-MM-yyyy');
+    const workout = workouts?.find((w) => w.date === formattedDate);
+    return workout?.musclesTrained || '';
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -52,6 +94,7 @@ const Carousel = (props: Props) => {
 
   return (
     <div className="flex flex-col  items-center  p-4 mt-32">
+      <Button onClick={jumpToToday}>Today</Button>
       <div className="flex justify-center  items-center space-x-12">
         <button onClick={handlePreviousDay} className="p-2 bg-gray-300 rounded">
           Previous
@@ -67,13 +110,21 @@ const Carousel = (props: Props) => {
               <div className="mb-2">{format(day, 'MMM d')}</div>
               <div
                 className={`flex flex-col items-center p-4 rounded-lg w-20 h-48 ${
-                  format(day, 'yyyy-MM-dd') === format(currentDay, 'yyyy-MM-dd')
+                  format(day, 'dd-MM-yyyy') === format(currentDay, 'dd-MM-yyyy')
                     ? 'bg-blue-500 text-white'
                     : 'bg-gray-200'
                 }`}
               >
                 <div>{format(day, 'EEE')}</div>
-                <AddWorkoutDialog index={index} hoveredIndex={hoveredIndex} />
+                <div className="mt-2 text-sm">
+                  {getMusclesTrainedForDate(day)}
+                </div>{' '}
+                {/* Display muscles trained */}
+                <AddWorkoutDialog
+                  index={index}
+                  hoveredIndex={hoveredIndex}
+                  date={format(day, 'dd-MM-yyyy')}
+                />
               </div>
             </div>
           ))}

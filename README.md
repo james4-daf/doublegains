@@ -8,10 +8,14 @@ First, run the development server:
 npm run dev
 
 
+prisma studio
 
+npx prisma studio
+
+npx prisma db push
+to update schema
 todo:
-- [ ] add next-auth
-- [ ] add prisma
-- [ ] add prisma
+- [X] add prisma
+- [ ] host on vercel
 
 ```
