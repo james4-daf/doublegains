@@ -7,6 +7,7 @@ import { useSession } from 'next-auth/react';
 import React, { useEffect, useState } from 'react';
 import Loading from './Loading';
 import { AddWorkoutDialog } from './myUi/AddWorkoutDialog';
+import EditWorkoutDialog from './myUi/EditWorkoutDialog';
 import { Button } from './ui/button';
 
 type Props = {};
@@ -60,6 +61,7 @@ const Carousel = (props: Props) => {
     setCurrentDay((prev) => {
       const newDay = addDays(prev, 1);
       setDays(days.map((day) => addDays(day, 1)));
+      setHoveredIndex(null);
       return newDay;
     });
   };
@@ -68,6 +70,7 @@ const Carousel = (props: Props) => {
     setCurrentDay((prev) => {
       const newDay = subDays(prev, 1);
       setDays(days.map((day) => subDays(day, 1)));
+      setHoveredIndex(null);
       return newDay;
     });
   };
@@ -75,13 +78,14 @@ const Carousel = (props: Props) => {
   const jumpToToday = () => {
     const today = new Date();
     setCurrentDay(today);
+    setHoveredIndex(null);
     setDays(Array.from({ length: 7 }, (_, i) => addDays(today, i - 3)));
   };
 
   const getMusclesTrainedForDate = (date: Date) => {
     const formattedDate = format(date, 'dd-MM-yyyy');
-    const workout = workouts?.find((w) => w.date === formattedDate);
-    return workout?.musclesTrained || '';
+    const workoutsForDate = workouts?.filter((w) => w.date === formattedDate);
+    return workoutsForDate?.map((workout) => workout.musclesTrained) || [];
   };
 
   if (loading) {
@@ -109,7 +113,7 @@ const Carousel = (props: Props) => {
             >
               <div className="mb-2">{format(day, 'MMM d')}</div>
               <div
-                className={`flex flex-col items-center p-4 rounded-lg w-20 h-48 ${
+                className={`flex flex-col items-center pt-2  rounded-lg w-full h-full ${
                   format(day, 'dd-MM-yyyy') === format(currentDay, 'dd-MM-yyyy')
                     ? 'bg-blue-500 text-white'
                     : 'bg-gray-200'
@@ -117,15 +121,28 @@ const Carousel = (props: Props) => {
               >
                 <div>{format(day, 'EEE')}</div>
                 <div className="mt-2 text-sm">
-                  {getMusclesTrainedForDate(day)}
+                  {getMusclesTrainedForDate(day).map((muscle, index) => {
+                    return (
+                      <ul key={index} className="text-center">
+                        <li>
+                          <EditWorkoutDialog setHoveredIndex={setHoveredIndex}>
+                            {muscle}
+                          </EditWorkoutDialog>
+                        </li>
+                      </ul>
+                    );
+                  })}
                 </div>{' '}
                 {/* Display muscles trained */}
-                <AddWorkoutDialog
-                  index={index}
-                  hoveredIndex={hoveredIndex}
-                  date={format(day, 'dd-MM-yyyy')}
-                />
               </div>
+              <AddWorkoutDialog
+                index={index}
+                hoveredIndex={hoveredIndex}
+                date={format(day, 'dd-MM-yyyy')}
+                getMusclesTrainedForDate={getMusclesTrainedForDate}
+                clientFetchUserWorkouts={clientFetchUserWorkouts}
+                setHoveredIndex={setHoveredIndex}
+              />
             </div>
           ))}
         </div>

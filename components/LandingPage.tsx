@@ -12,7 +12,9 @@ function LandingPage() {
               </div>
             </div>
             <div className="flex items-center ">
-              <button className="border mx-6">login</button>
+              <button onClick={() => signIn('google')} className="border mx-6">
+                login
+              </button>
               <button className="border">sign up</button>
             </div>
           </div>

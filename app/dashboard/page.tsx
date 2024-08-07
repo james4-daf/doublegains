@@ -1,4 +1,5 @@
 'use client';
+import Loading from '@/components/Loading';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
@@ -15,7 +16,7 @@ export default function Home() {
   }, [status, router]);
 
   if (status === 'loading') {
-    return <p>Loading...</p>; // Or a loading spinner, etc.
+    return <Loading />; // Or a loading spinner, etc.
   }
 
   return (

@@ -23,10 +23,14 @@ export function AddWorkoutDialog({
   index,
   hoveredIndex,
   date,
+  clientFetchUserWorkouts,
+  setHoveredIndex,
 }: {
   index: number;
   hoveredIndex: number;
   date: string;
+  clientFetchUserWorkouts: Function;
+  setHoveredIndex: Function;
 }) {
   const { data: session } = useSession();
   const [formWorkoutData, setFormWorkoutData] = useState({
@@ -51,6 +55,7 @@ export function AddWorkoutDialog({
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    setHoveredIndex(null);
     // console.log('submitting');
     if (!formWorkoutData.userEmail) {
       console.error('User email is missing. Cannot create workout.');
@@ -68,6 +73,7 @@ export function AddWorkoutDialog({
 
     try {
       await createWorkout(formData);
+      await clientFetchUserWorkouts();
       // Optionally reset the form or handle post-submission logic here
     } catch (error) {
       console.error('Failed to create workout:', error);
@@ -75,14 +81,14 @@ export function AddWorkoutDialog({
   }
 
   return (
-    <Dialog>
+    <Dialog onOpenChange={(isOpen) => !isOpen && setHoveredIndex(null)}>
       <DialogTrigger asChild>
         <button
-          className={` p-8 w-[80%] bg-blue-500 text-white rounded transition-opacity duration-300 ${
+          className={` p-4 w-[100%] h-12 bg-neutral-300 text-black rounded transition-opacity duration-300 text-center ${
             hoveredIndex === index ? 'opacity-100' : 'opacity-0'
           }`}
         >
-          <CiSquarePlus />
+          Add +
         </button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
@@ -161,7 +167,9 @@ export function AddWorkoutDialog({
                 </div>
                 <DialogFooter>
                   <DialogClose asChild>
-                    <Button type="submit">Save changes</Button>
+                    <Button onClick={() => setHoveredIndex(null)} type="submit">
+                      Save changes
+                    </Button>
                   </DialogClose>
                 </DialogFooter>
               </>
